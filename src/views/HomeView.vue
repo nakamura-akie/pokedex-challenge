@@ -1,92 +1,55 @@
 <script setup>
-import axios from 'axios'
-import { onMounted, reactive, ref, computed } from 'vue'
-import PokemonsList from "../components/PokemonsList.vue"
-import PokemonCardSelected from "../components/PokemonCardSelected.vue"
+import { onMounted, reactive, ref } from "vue";
+import PokemonCard from "../components/PokemonCard.vue"
+import axios from "axios";
 
-let urlBaseSvg = ref("https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/")
-let pokemons = reactive(ref());
-let searchPokemonField = ref("")
 let pokemonSelected = reactive(ref());
-let loading = ref(false)
 
-onMounted(() => {
-  axios.get('https://pokeapi.co/api/v2/pokemon?limit=151&offset=0')
-    .then(response => response.data)
-    .then(response => pokemons = response.results);
+onMounted(()=>{
+  getPokemonData()
 })
 
-const pokemonsFiltered = computed(()=>{
-  if(pokemons.value && searchPokemonField.value){
-    return pokemons.value.filter(pokemon=>
-      pokemon.name.toLowerCase().includes(searchPokemonField.value.toLowerCase())
-    )
-  }
-  return pokemons.value;
-})
-
-const selectPokemon = async (pokemon) => {
-  loading.value = true;
-  await axios.get(pokemon.url)
-  .then(response => response.data)
-  .then(response => pokemonSelected.value = response)
-  .catch(err => alert(err))
-  .finally(()=> loading.value = false)
-
-  console.log(pokemonSelected.value)
-  
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+function getPokemonData() {
+  axios.get("https://pokeapi.co/api/v2/pokemon/" + getRandomInt(1,151))
+  .then(res => res.data)
+  .then(res => pokemonSelected.value = res);
+}
+
+const randomSelection = () => {
+  getPokemonData()
+}
 </script>
 
 <template>
   <main>
-    <div class="container text-body-secondary">
+    <div class="container">
       
-      <div class="row mt-4">
-        <div class="col-sm-12 col-md-6">
+      <div>
+        <div class="card" style="width: 24rem;">
           
-          <PokemonCardSelected
+          <PokemonCard
           :name="pokemonSelected?.name"
           :xp="pokemonSelected?.base_experience"
-          :weight="pokemonSelected?.weight"
-          :height="pokemonSelected?.height"
           :types="pokemonSelected?.types"
+          :height="pokemonSelected?.height"
+          :weight="pokemonSelected?.weight"
           :img="pokemonSelected?.sprites.other.dream_world.front_default"
-          :loading="loading"
           />
 
         </div>
-  
-        <div class="col-sm-12 col-md-6">
-          <div class="card card-list">
-            <div class="card-body row">
-              
-              <div class="mb-3">
-                <label 
-                hidden 
-                for="searchPokemonField" 
-                class="form-label">
-                Search Pokemon
-                </label>
 
-                <input 
-                v-model="searchPokemonField"
-                type="text" 
-                class="form-control" 
-                id="searchPokemonField" 
-                placeholder="Search Pokemon">
-              </div>
-
-              <PokemonsList
-              v-for="pokemon in pokemonsFiltered"
-              :key="pokemon.name"
-              :name="pokemon.name"
-              :urlBaseSvg="urlBaseSvg + pokemon.url.split('/')[6] + '.svg'"
-              @click="selectPokemon(pokemon)"
-              />
-            </div>
-          </div>
+        <div class="d-grid gap-2 col-6 mx-auto" style="width: 18rem;">
+          <button 
+          type="button" 
+          class="btn btn-danger"
+          @click="randomSelection()"
+          >
+          New Pokemon
+        </button>
         </div>
       </div>
 
@@ -95,9 +58,17 @@ const selectPokemon = async (pokemon) => {
 </template>
 
 <style scoped>
-.card-list{
-  max-height: 75vh;
-  overflow-y: scroll;
-  overflow-x: hidden;
+button {
+  align-items: center;
+  margin-top: 50px;
+}
+
+.card {
+  margin: auto;
+  width: 50%;
+  border: 15px solid rgb(247, 206, 73);
+  padding: 10px;
+  margin-top: 50px;
+  background: rgba(212, 187, 146, 0.532);
 }
 </style>
